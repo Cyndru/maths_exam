@@ -4,32 +4,40 @@
   <meta charset="UTF-8">
   <title>Maths Exam</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-    #exam { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #aaa; max-width: 800px; margin: auto; }
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; text-align: center; }
+    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #aaa; max-width: 800px; margin: auto; }
     #timer { font-size: 20px; font-weight: bold; color: red; margin-bottom: 15px; text-align: center; }
     #question { font-size: 18px; margin-bottom: 10px; }
-    input[type=text] { width: 100%; padding: 8px; margin-bottom: 10px; }
+    input[type=text] { width: 80%; padding: 8px; margin-bottom: 10px; }
     button { padding: 10px 15px; font-size: 16px; cursor: pointer; border-radius: 5px; }
-    #result { margin-top: 20px; padding: 15px; background: #eef; border-radius: 8px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #ddd; padding: 8px; }
     th { background: #f2f2f2; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <div id="exam">
+  <!-- Name Screen -->
+  <div class="card" id="nameScreen">
     <h1>Maths Exam</h1>
+    <p>Enter Student Name:</p>
+    <input type="text" id="studentName" placeholder="Your name">
+    <br>
+    <button onclick="startExam()">Start Exam</button>
+  </div>
+
+  <!-- Exam Screen -->
+  <div class="card hidden" id="examScreen">
+    <h2 id="welcome"></h2>
     <div id="timer"></div>
     <div id="question"></div>
     <input type="text" id="answer" placeholder="Type your answer here">
+    <br>
     <button onclick="checkAnswer()">Submit Answer</button>
     <div id="result"></div>
   </div>
 
   <script>
-    // --------------------------
-    // Full Question Bank
-    // --------------------------
     const questions = [
       // Fish Tale
       { q: "Write the number name for 5,23,47,289", a: "Five crore twenty-three lakh forty-seven thousand two hundred eighty-nine" },
@@ -67,20 +75,32 @@
 
     let current = 0, score = 0;
     let answers = [];
+    let totalTime = 60 * 60; // 1 hour in seconds
+    let countdown;
 
-    // Timer: 1 hour = 3600 seconds
-    let totalTime = 60 * 60;
+    function startExam() {
+      const name = document.getElementById("studentName").value.trim();
+      if (name === "") {
+        alert("Please enter your name!");
+        return;
+      }
+      document.getElementById("nameScreen").classList.add("hidden");
+      document.getElementById("examScreen").classList.remove("hidden");
+      document.getElementById("welcome").innerText = "Welcome, " + name + "!";
+      loadQuestion();
+      startTimer();
+    }
 
     function startTimer() {
       let timer = document.getElementById("timer");
-      let countdown = setInterval(() => {
+      countdown = setInterval(() => {
         let minutes = Math.floor(totalTime / 60);
         let seconds = totalTime % 60;
         timer.textContent = `⏰ Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         if (totalTime <= 0) {
           clearInterval(countdown);
           alert("⏰ Time's up! Your exam is over.");
-          showResult(); // auto-submit
+          showResult();
         }
         totalTime--;
       }, 1000);
@@ -105,24 +125,16 @@
       } else {
         let correctNumbers = correct.match(/\d+/g);
         let ansNumbers = ans.match(/\d+/g);
-
         if (correctNumbers && ansNumbers && correctNumbers.length === ansNumbers.length) {
           let allMatch = correctNumbers.every((num, i) => parseInt(num) === parseInt(ansNumbers[i]));
-          if (allMatch) {
-            score++;
-            status = "✅ Correct";
-          }
+          if (allMatch) { score++; status = "✅ Correct"; }
         } else {
           let ansNum = parseFloat(ans.replace(/,/g, ''));
           let correctNum = parseFloat(correct.replace(/,/g, ''));
           if (!isNaN(ansNum) && !isNaN(correctNum) && ansNum === correctNum) {
-            score++;
-            status = "✅ Correct";
-          } else {
-            if (ans.toLowerCase().replace(/\s+/g, '') === correct.toLowerCase().replace(/\s+/g, '')) {
-              score++;
-              status = "✅ Correct";
-            }
+            score++; status = "✅ Correct";
+          } else if (ans.toLowerCase().replace(/\s+/g, '') === correct.toLowerCase().replace(/\s+/g, '')) {
+            score++; status = "✅ Correct";
           }
         }
       }
@@ -133,6 +145,7 @@
     }
 
     function showResult() {
+      clearInterval(countdown);
       let res = `<h2>Exam Finished</h2>`;
       res += `<p>Your Score: ${score} / ${questions.length}</p>`;
       res += `<table><tr><th>Question</th><th>Your Answer</th><th>Correct Answer</th><th>Status</th></tr>`;
@@ -144,11 +157,6 @@
       document.getElementById("question").style.display = "none";
       document.getElementById("answer").style.display = "none";
     }
-
-    window.onload = function() {
-      loadQuestion();
-      startTimer();
-    };
   </script>
 </body>
 </html>
